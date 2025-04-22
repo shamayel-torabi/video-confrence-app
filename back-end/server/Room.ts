@@ -1,14 +1,14 @@
 // Rooms are not a MediaSoup thing. MS cares about mediastreams, transports,
 // things like that. It doesn't care, or know, about rooms.
 // Rooms can be inside of clients, clients inside of rooms,
-
+import { EventEmitter } from "node:events";
 import { ActiveSpeakerObserver, ActiveSpeakerObserverDominantSpeaker, Router, Worker } from "mediasoup/types";
 import { Client } from "./Client";
 import { config } from "./config";
 import { SocketIOType } from "./mediaServer";
 
 // transports can belong to rooms or clients, etc.
-export class Room {
+export class Room extends EventEmitter {
   roomName: string;
   worker: Worker;
   router: Router | undefined;
@@ -17,6 +17,7 @@ export class Room {
   activeSpeakerObserver: ActiveSpeakerObserver | undefined;
 
   constructor(roomName: string, workerToUse: Worker) {
+    super();
     this.roomName = roomName;
     this.worker = workerToUse;
     //all the Client objects that are in this room
@@ -24,9 +25,23 @@ export class Room {
     //an array of id's with the most recent dominant speaker first
     this.activeSpeakerList = [];
   }
+
+  close() {
+    if (this.router) {
+      this.router.close();
+    }
+    this.emit("close");
+  }
+
   addClient(client: Client) {
     this.clients.push(client);
   }
+
+  removeClient(client: Client) {
+    this.clients = this.clients.filter((c) => c.id !== client.id);
+  }
+
+
   createRouter(io: SocketIOType) {
     return new Promise<void>(async (resolve, _reject) => {
       this.router = await this.worker.createRouter({
@@ -59,26 +74,8 @@ export class Room {
     console.log(this.activeSpeakerList)
     // PLACEHOLDER - the activeSpeakerlist has changed!
     // updateActiveSpeakers = mute/unmute/get new transports
-    const newTransportsByPeer = this.updateActiveSpeakers(io)
-    for (const [socketId, audioPidsToCreate] of Object.entries(newTransportsByPeer)) {
-      // we have the audioPidsToCreate this socket needs to create
-      // map the video pids and the username
-      const videoPidsToCreate = audioPidsToCreate.map(aPid => {
-        const producerClient = this.clients.find(c => c?.producer?.audio?.id === aPid)
-        return producerClient?.producer?.video?.id || ''
-      })
-      const associatedUserNames = audioPidsToCreate.map(aPid => {
-        const producerClient = this.clients.find(c => c?.producer?.audio?.id === aPid)
-        return producerClient?.userName || ''
-      })
-      io.to(socketId).emit('newProducersToConsume', {
-        routerRtpCapabilities: this.router?.rtpCapabilities!,
-        audioPidsToCreate,
-        videoPidsToCreate,
-        associatedUserNames,
-        activeSpeakerList: this.activeSpeakerList.slice(0, 5)
-      })
-    }
+    const newTransportsByPeer = this.updateActiveSpeakers(io);
+    this.sendProducersToConsume(newTransportsByPeer, io);
   }
 
   updateActiveSpeakers(io: SocketIOType) {
@@ -148,4 +145,25 @@ export class Room {
     return newTransportsByPeer;
   };
 
+  sendProducersToConsume(newTransportsByPeer: Record<string, string[]>, io: SocketIOType) {
+    for (const [socketId, audioPidsToCreate] of Object.entries(newTransportsByPeer)) {
+      // we have the audioPidsToCreate this socket needs to create
+      // map the video pids and the username
+      const videoPidsToCreate = audioPidsToCreate.map(aPid => {
+        const producerClient = this.clients.find(c => c?.producer?.audio?.id === aPid)
+        return producerClient?.producer?.video?.id || ''
+      })
+      const associatedUserNames = audioPidsToCreate.map(aPid => {
+        const producerClient = this.clients.find(c => c?.producer?.audio?.id === aPid)
+        return producerClient?.userName || ''
+      })
+      io.to(socketId).emit('newProducersToConsume', {
+        routerRtpCapabilities: this.router?.rtpCapabilities!,
+        audioPidsToCreate,
+        videoPidsToCreate,
+        associatedUserNames,
+        activeSpeakerList: this.activeSpeakerList.slice(0, 5)
+      })
+    }
+  };
 }

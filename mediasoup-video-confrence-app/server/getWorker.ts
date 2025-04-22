@@ -2,13 +2,13 @@
 import { Worker } from "mediasoup/types";
 
 
-function getWorker(workers: Worker[]) {
+export function getWorker(workers: Worker[]) {
     // Outside promise for the main program to resolve the desired worker
-    return new Promise<Worker>(async(resolve, reject)=>{
+    return new Promise<Worker>(async(resolve, _reject)=>{
         // inside promises (in array) for each worker to calculate it's useage
         const workersLoad = workers.map(worker=>{
             // put this Promise on the array (will init as Pending)
-            return new Promise<number>(async(resolve, reject)=>{
+            return new Promise<number>(async(resolve, _reject)=>{
                 const stats = await worker.getResourceUsage();
                 // this calculates cumulative load, not current.
                 // We'd need a setTimeout to do that
@@ -31,4 +31,3 @@ function getWorker(workers: Worker[]) {
     })
 }
 
-export default getWorker;

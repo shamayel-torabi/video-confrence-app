@@ -1,21 +1,10 @@
-import { Consumer, RtpCapabilities,  WebRtcTransport } from "mediasoup/types";
+import { Consumer, DtlsParameters, IceCandidate, IceParameters, MediaKind, RtpCapabilities, RtpParameters, WebRtcTransport } from "mediasoup/types";
 
 export type Message = {
     id: string
     text: string
     userName: string,
     date: string
-}
-
-
-export type User = {
-    id: string;
-    email: string;
-    role: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-    createdAt: Date;
 }
 
 export type MediaConsumer = {
@@ -42,3 +31,16 @@ export type DownstreamTransportType = {
     video?: Consumer
 }
 
+export type ClientTransportOptions = {
+    id: string;
+    iceParameters: IceParameters;
+    iceCandidates: IceCandidate[];
+    dtlsParameters: DtlsParameters
+}
+
+export type ClientParamsType = {
+    producerId: string;
+    id: string;
+    kind: MediaKind;
+    rtpParameters: RtpParameters
+}

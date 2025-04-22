@@ -1,17 +1,17 @@
 import os from "node:os"; //operating system module. part of node
-import mediasoup from "mediasoup";
-import config from "./config.js";
+import { config } from "./config";
+import { createWorker } from "mediasoup";
 import { Worker } from "mediasoup/types";
 
 const totalThreads = os.cpus().length; //maximum number of allowed workers
 // console.log(totalThreads)
 
-const createWorkers = () =>
-  new Promise<Worker[]>(async (resolve, reject) => {
+export const createWorkers = () =>
+  new Promise<Worker[]>(async (resolve, _reject) => {
     let workers: Worker[] = [];
     //loop to create each worker
     for (let i = 0; i < totalThreads; i++) {
-      const worker = await mediasoup.createWorker({
+      const worker = await createWorker({
         //rtcMinPort and max are just arbitray ports for our traffic
         //useful for firewall or networking rules
         rtcMinPort: config.workerSettings.rtcMinPort,
@@ -32,4 +32,3 @@ const createWorkers = () =>
     resolve(workers);
   });
 
-export default createWorkers;

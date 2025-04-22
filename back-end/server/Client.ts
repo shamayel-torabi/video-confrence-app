@@ -1,11 +1,12 @@
-
+import { EventEmitter } from "node:events";
 import { SocketType } from "./mediaServer";
 import { Room } from "./Room";
 import { ClientTransportOptions, DownstreamTransportType } from "./types";
 import { config } from "./config";
 import { Consumer, MediaKind, Producer, WebRtcTransport } from "mediasoup/types";
 
-export class Client {
+export class Client extends EventEmitter  {
+  id: string;
   userName: string;
   socket: SocketType;
   room: Room;
@@ -14,11 +15,24 @@ export class Client {
   downstreamTransports: DownstreamTransportType[] = [];
 
   constructor(userName: string, room: Room, socket: SocketType) {
+    super()
     this.userName = userName;
     this.socket = socket;
+    this.id = socket.id;
     this.room = room; // this will be a Room object
     this.room.addClient(this);
   }
+
+  close() {
+    if(this.upstreamTransport)
+    {
+      this.upstreamTransport.close();      
+    }
+
+    this.room.removeClient(this);
+    this.emit("close");
+  }
+  
   addTransport(type: string, audioPid?: string, videoPid?: string) {
     return new Promise<ClientTransportOptions>(async (resolve, _reject) => {
       const {
