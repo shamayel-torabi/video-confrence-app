@@ -1,0 +1,10 @@
+// jsconfig.json
+{
+    "compilerOptions": {
+        "paths": {
+            "@js/*": [
+                "./src/assets/js/*"
+            ]
+        }
+    }
+}

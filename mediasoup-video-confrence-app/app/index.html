@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>خانه</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <main class="grid grid-rows-[4rem_1fr] h-screen overflow-y-auto">
+    <header id="header" class="max-h-16 bg-gray-200 border-gray-400 dark:bg-gray-800"></header>
+    <section class="overflow-y-auto">
+      <article class="grid items-center justify-center h-(--page--height)">
+        <div class="card w-[24rem]">
+          <h5 class="card-title">پیوستن به نشست</h5>
+          <form id="frmJoin" class="max-w-sm mx-auto">
+            <div class="mb-3">
+              <label for="room">نام نشست</label>
+              <input type="text" id="room" name="room" placeholder="Room Name" />
+            </div>
+            <div class="mb-3">
+              <label for="username">نام کاربر</label>
+              <input type="text" id="username" name="username" placeholder="Username" />
+            </div>
+            <div class="grid justify-end">
+              <button type="submit">پیوستن</button>
+            </div>
+          </form>
+        </div>
+      </article>
+    </section>
+  </main>
+  <script type="module" src="./index.ts"></script>
+</body>
+
+</html>

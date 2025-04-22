@@ -1,0 +1,33 @@
+{
+  "name": "mediasoup-video-confrence-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch server",
+    "build": "vite build",
+    "preview": "cross-env NODE_ENV=production node server"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.4",
+    "compression": "^1.8.0",
+    "express": "^5.0.1",
+    "mediasoup": "^3.15.7",
+    "mediasoup-client": "^3.9.5",
+    "sirv": "^3.0.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.1.4",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.4",
+    "cross-env": "^7.0.3",
+    "glob": "^11.0.1",
+    "tsx": "^4.19.3",
+    "typescript": "~5.7.3",
+    "vite": "^6.3.1",
+    "vite-plugin-minify": "^2.1.0"
+  }
+}
