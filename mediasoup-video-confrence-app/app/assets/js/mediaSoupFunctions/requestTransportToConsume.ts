@@ -1,7 +1,15 @@
+import { Socket } from "socket.io-client";
 import createConsumer from "./createConsumer";
 import createConsumerTransport from "./createConsumerTransport";
+import { Device } from "mediasoup-client";
+import { ConsumeData, ConsumerType } from "./types";
 
-const requestTransportToConsume = (consumeData, socket, device, consumers) => {
+const requestTransportToConsume = (
+  consumeData: ConsumeData,
+  socket: Socket,
+  device: Device,
+  consumers: Record<string, ConsumerType>
+) => {
   //how many transports? One for each consumer?
   // Or one that handles all consumers?
   //if we do one for every consumer, it will mean we can do
@@ -41,7 +49,9 @@ const requestTransportToConsume = (consumeData, socket, device, consumers) => {
         audioConsumer?.track,
         videoConsumer?.track,
       ]);
-      const remoteVideo = document.getElementById(`remote-video-${i}`);
+      const remoteVideo = document.getElementById(
+        `remote-video-${i}`
+      ) as HTMLVideoElement;
       remoteVideo.srcObject = combinedStream;
       console.log("Hope this works...");
       consumers[audioPid] = {

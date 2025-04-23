@@ -1,12 +1,15 @@
+import { Consumer, Device, MediaKind, Transport } from "mediasoup-client/types";
+import { Socket } from "socket.io-client";
+
 const createConsumer = (
-  consumerTransport,
-  producerId,
-  device,
-  socket,
-  kind,
-  slot
+  consumerTransport: Transport,
+  producerId: string,
+  device: Device,
+  socket: Socket,
+  kind: MediaKind,
+  slot?: number
 ) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise<Consumer>(async (resolve, reject) => {
     // consume from the basics, emit the consumeMedia event, we take
     // the params we get back, and run .consume(). That gives us our track
     const consumerParams = await socket.emitWithAck("consumeMedia", {

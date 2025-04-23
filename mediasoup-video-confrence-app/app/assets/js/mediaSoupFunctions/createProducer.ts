@@ -1,6 +1,7 @@
+import { Producer, Transport } from "mediasoup-client/types"
 
-const createProducer = (localStream, producerTransport)=>{
-    return new Promise(async(resolve, reject)=>{
+const createProducer = (localStream: MediaStream, producerTransport: Transport)=>{
+    return new Promise<{audioProducer: Producer, videoProducer: Producer}>(async(resolve, reject)=>{
         //get the audio and video tracks so we can produce
         const videoTrack = localStream.getVideoTracks()[0]
         const audioTrack = localStream.getAudioTracks()[0]
@@ -15,6 +16,7 @@ const createProducer = (localStream, producerTransport)=>{
             resolve({audioProducer,videoProducer})
         }catch(err){
             console.log(err,"error producing")
+            reject("error producing")
         }
     })
 }

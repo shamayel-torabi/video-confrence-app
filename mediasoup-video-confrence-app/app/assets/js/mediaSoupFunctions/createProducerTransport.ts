@@ -1,5 +1,9 @@
-const createProducerTransport = (socket, device) =>
-  new Promise(async (resolve, _reject) => {
+import { Device } from "mediasoup-client";
+import { Transport } from "mediasoup-client/types";
+import { Socket } from "socket.io-client";
+
+const createProducerTransport = (socket: Socket, device: Device) =>
+  new Promise<Transport>(async (resolve, _reject) => {
     // ask the server to make a transport and send params
     const producerTransportParams = await socket.emitWithAck(
       "requestTransport",
@@ -30,7 +34,7 @@ const createProducerTransport = (socket, device) =>
           callback();
         } else if (connectResp === "error") {
           // connection failed. Stop
-          errback();
+          errback(new Error("connection failed. Stop"));
         }
       }
     );
@@ -45,7 +49,7 @@ const createProducerTransport = (socket, device) =>
       //console.log(produceResp,"produceResp is back!")
       if (produceResp.error) {
         console.log("startProducing Error:", produceResp.error);
-        errback();
+        errback(new Error(`startProducing Error: ${produceResp.error}`));
       } else {
         // only other option is the producer id
         callback({ id: produceResp.producerId });

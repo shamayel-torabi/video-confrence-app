@@ -1,29 +1,29 @@
 import { io } from "socket.io-client";
 import { Device } from "mediasoup-client";
-import buttons from "@/assets/js/uiButtons";
 import createProducerTransport from "@/assets/js/mediaSoupFunctions/createProducerTransport";
 import createProducer from "@/assets/js/mediaSoupFunctions/createProducer";
 import requestTransportToConsume from "@/assets/js/mediaSoupFunctions/requestTransportToConsume";
 import { setupHeader } from "@/assets/js/components/header";
 import { Consumer, Producer, Transport } from "mediasoup-client/types";
+import {
+  enableFeedBtn,
+  hangUpBtn,
+  localMediaLeft,
+  muteBtn,
+  sendFeedBtn,
+} from "./assets/js/uiButtons";
+import { ConsumerType } from "@/assets/js/mediaSoupFunctions/types";
 
-type ConsumerType{
-  combinedStream: MediaStream;
-  userName: string;
-  consumerTransport: Transport;
-  audioConsumer: Consumer;
-  videoConsumer: Consumer;
-}
 let device: Device;
-let localStream : MediaStream;
-let producerTransport :Transport;
+let localStream: MediaStream;
+let producerTransport: Transport;
 let videoProducer: Producer;
-let audioProducer : Producer; //THIS client's producer
-let consumers :Record<string, ConsumerType> = {}; //key off the audioPid
+let audioProducer: Producer; //THIS client's producer
+let consumers: Record<string, ConsumerType> = {}; //key off the audioPid
 
 setupHeader(document.querySelector("#header")!, "ویدئو");
 
-const socket= io("/ws");
+const socket = io("/ws");
 
 socket.on("connectionSuccess", (data) => {
   console.log(`Connected socketId: ${data.socketId}`);
@@ -35,10 +35,12 @@ socket.on("updateActiveSpeakers", async (newListOfActives: string[]) => {
   // an array of the most recent 5 dominant speakers. Just grab the 1st
   // and put it in the slot. Move everything else down
   // consumers is an {} with key of audioId, value of combined feed
-  console.log('updateActiveSpeakers:', newListOfActives);
+  console.log("updateActiveSpeakers:", newListOfActives);
   let slot = 0;
   // remove all videos from video Els
-  const remoteEls = document.getElementsByClassName("remote-video") as HTMLCollectionOf<HTMLVideoElement> ;
+  const remoteEls = document.getElementsByClassName(
+    "remote-video"
+  ) as HTMLCollectionOf<HTMLVideoElement>;
   for (let el of remoteEls) {
     el.srcObject = null; //clear out the <video>
   }
@@ -46,8 +48,12 @@ socket.on("updateActiveSpeakers", async (newListOfActives: string[]) => {
     if (aid !== audioProducer?.id) {
       // do not show THIS client in a video tag, other than local
       // put this video in the next available slot
-      const remoteVideo = document.getElementById(`remote-video-${slot}`) as HTMLVideoElement;
-      const remoteVideoUserName = document.getElementById(`username-${slot}`) as HTMLDivElement;
+      const remoteVideo = document.getElementById(
+        `remote-video-${slot}`
+      ) as HTMLVideoElement;
+      const remoteVideoUserName = document.getElementById(
+        `username-${slot}`
+      ) as HTMLDivElement;
       const consumerForThisSlot = consumers[aid];
       remoteVideo.srcObject = consumerForThisSlot?.combinedStream;
       remoteVideoUserName.innerHTML = consumerForThisSlot?.userName;
@@ -74,8 +80,8 @@ const joinRoom = async () => {
       roomId,
     });
 
-    if(joinRoomResp.error){
-      alert(joinRoomResp.error)
+    if (joinRoomResp.error) {
+      alert(joinRoomResp.error);
       return;
     }
     // console.log(joinRoomResp)
@@ -84,17 +90,17 @@ const joinRoom = async () => {
       routerRtpCapabilities: joinRoomResp.routerRtpCapabilities,
     });
     // console.log(device)
-    console.log('joinRoomResp:', joinRoomResp);
+    console.log("joinRoomResp:", joinRoomResp);
     // joinRoomResp contains arrays for:
     // audioPidsToCreate
     // mapped to videoPidsToCreate
     // mapped to usernames
     //These arrays, may be empty... they may have a max of 5 indicies
     requestTransportToConsume(joinRoomResp, socket, device, consumers);
-    ``
-    buttons.enableFeed?.disabled = false;
-    buttons.sendFeed.disabled = true;
-    buttons.muteBtn.disabled = true;    
+    ``;
+    enableFeedBtn.disabled = false;
+    sendFeedBtn.disabled = true;
+    muteBtn.disabled = true;
   }
 };
 
@@ -103,10 +109,10 @@ const enableFeed = async () => {
     video: true,
     audio: true,
   });
-  buttons.localMediaLeft.srcObject = localStream;
-  buttons.enableFeed.disabled = true;
-  buttons.sendFeed.disabled = false;
-  buttons.muteBtn.disabled = false;
+  localMediaLeft.srcObject = localStream;
+  enableFeedBtn.disabled = true;
+  sendFeedBtn.disabled = false;
+  muteBtn.disabled = false;
 };
 
 const sendFeed = async () => {
@@ -119,7 +125,7 @@ const sendFeed = async () => {
   audioProducer = producers.audioProducer;
   videoProducer = producers.videoProducer;
   //console.log(producers);
-  buttons.hangUp.disabled = false;
+  hangUpBtn.disabled = false;
 };
 
 const muteAudio = () => {
@@ -128,7 +134,7 @@ const muteAudio = () => {
   if (audioProducer.paused) {
     // currently paused. User wants to unpause
     audioProducer.resume();
-    buttons.muteBtn.innerHTML = `
+    muteBtn.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic-off-icon lucide-mic-off">
       <line x1="2" x2="22" y1="2" y2="22"/>
       <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/>
@@ -138,14 +144,14 @@ const muteAudio = () => {
       <line x1="12" x2="12" y1="19" y2="22"/>
       </svg>
     `;
-    buttons.muteBtn.classList.add("btn-success"); //turn it green
-    buttons.muteBtn.classList.remove("btn-danger"); //remove the red
+    muteBtn.classList.add("btn-success"); //turn it green
+    muteBtn.classList.remove("btn-danger"); //remove the red
     // unpause on the server
     socket.emit("audioChange", "unmute");
   } else {
     //currently on, user wnats to pause
     audioProducer.pause();
-    buttons.muteBtn.innerHTML = `
+    muteBtn.innerHTML = `
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic-icon lucide-mic">
       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
       <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -153,13 +159,13 @@ const muteAudio = () => {
       </svg>
 
     `;
-    buttons.muteBtn.classList.remove("btn-success"); //turn it green
-    buttons.muteBtn.classList.add("btn-danger"); //remove the red
+    muteBtn.classList.remove("btn-success"); //turn it green
+    muteBtn.classList.add("btn-danger"); //remove the red
     socket.emit("audioChange", "mute");
   }
 };
 
 window.addEventListener("load", joinRoom);
-buttons.enableFeed.addEventListener("click", enableFeed);
-buttons.sendFeed.addEventListener("click", sendFeed);
-buttons.muteBtn.addEventListener("click", muteAudio);
+enableFeedBtn.addEventListener("click", enableFeed);
+sendFeedBtn.addEventListener("click", sendFeed);
+muteBtn.addEventListener("click", muteAudio);
