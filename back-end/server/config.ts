@@ -12,7 +12,7 @@ type configTYpe = {
 }
 
 const HOST = process.env.HOST;
-console.log('HOST=', HOST)
+//console.log('HOST=', HOST)
 
 const config: configTYpe = {
   port: Number.parseInt(process.env.PORT!) || 3031,
@@ -54,13 +54,13 @@ const config: configTYpe = {
       {
         protocol: 'udp',
         ip: "0.0.0.0", //anywhere
-        announcedAddress: "192.168.1.191", // replace by public IP address
+        announcedAddress: `${HOST}` // "192.168.1.191", // replace by public IP address
         // announcedAddress: '76.97.119.246',
       },
       {
         protocol: 'tcp',
         ip: "0.0.0.0", //anywhere
-        announcedAddress: "192.168.1.191", // replace by public IP address
+        announcedAddress: `${HOST}` //"192.168.1.191", // replace by public IP address
         // announcedAddress: '76.97.119.246',
       },
     ],
