@@ -51,8 +51,7 @@ export class Room extends EventEmitter {
       this.activeSpeakerObserver?.removeProducer({ producerId });
       this.activeSpeakerList = this.activeSpeakerList.filter(ac => ac !== producerId);
 
-      const newTransportsByPeer = this.updateActiveSpeakers();
-      this.updateProducersToConsume(newTransportsByPeer); 
+      this.updateActiveSpeakers();
     }
 
     this.clients = this.clients.filter((c) => c.id !== client.id);
@@ -90,8 +89,7 @@ export class Room extends EventEmitter {
     //console.log(this.activeSpeakerList);
     // PLACEHOLDER - the activeSpeakerlist has changed!
     // updateActiveSpeakers = mute/unmute/get new transports
-    const newTransportsByPeer = this.updateActiveSpeakers();
-    this.updateProducersToConsume(newTransportsByPeer);
+    this.updateActiveSpeakers();
   }
 
   updateActiveSpeakers() {
@@ -158,10 +156,10 @@ export class Room extends EventEmitter {
     // need to be made.
     // Broadcast to this this
     this.io.to(this.roomName).emit("updateActiveSpeakers", activeSpeakers);
-    return newTransportsByPeer;
+    this.updateProducersToConsume(newTransportsByPeer);
   }
 
-  updateProducersToConsume(newTransportsByPeer: Record<string, string[]>) {
+  private updateProducersToConsume(newTransportsByPeer: Record<string, string[]>) {
     for (const [socketId, audioPidsToCreate] of Object.entries(
       newTransportsByPeer
     )) {

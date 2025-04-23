@@ -123,7 +123,7 @@ const runMediaSoupServer = async (app: any) => {
       rooms: currentRooms,
     });
     socket.on("disconnect", () => {
-      if (client){
+      if (client) {
         client.close();
       }
     });
@@ -242,36 +242,7 @@ const runMediaSoupServer = async (app: any) => {
       }
 
       // run updateActiveSpeakers
-      const newTransportsByPeer = client.room.updateActiveSpeakers();
-      client.room.updateProducersToConsume(newTransportsByPeer);
-      // newTransportsByPeer is an object, each property is a socket.id that
-      // has transports to make. They are in an array, by pid
-      // Changed by sham
-      // for (const [socketId, audioPidsToCreate] of Object.entries(
-      //   newTransportsByPeer
-      // )) {
-      //   // we have the audioPidsToCreate this socket needs to create
-      //   // map the video pids and the username
-      //   const videoPidsToCreate = audioPidsToCreate.map((aPid) => {
-      //     const producerClient = client.room.clients.find(
-      //       (c) => c?.producer?.audio?.id === aPid
-      //     );
-      //     return producerClient?.producer?.video?.id || '';
-      //   });
-      //   const associatedUserNames = audioPidsToCreate.map((aPid) => {
-      //     const producerClient = client.room.clients.find(
-      //       (c) => c?.producer?.audio?.id === aPid
-      //     );
-      //     return producerClient?.userName || '';
-      //   });
-      //   io.to(socketId).emit("newProducersToConsume", {
-      //     routerRtpCapabilities: client.room.router?.rtpCapabilities!,
-      //     audioPidsToCreate,
-      //     videoPidsToCreate,
-      //     associatedUserNames,
-      //     activeSpeakerList: client.room.activeSpeakerList.slice(0, 5),
-      //   });
-      // }
+      client.room.updateActiveSpeakers();
     });
     socket.on("audioChange", (typeOfChange) => {
       try {
