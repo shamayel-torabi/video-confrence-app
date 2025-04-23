@@ -5,15 +5,23 @@ import createProducerTransport from "@/assets/js/mediaSoupFunctions/createProduc
 import createProducer from "@/assets/js/mediaSoupFunctions/createProducer";
 import requestTransportToConsume from "@/assets/js/mediaSoupFunctions/requestTransportToConsume";
 import { setupHeader } from "@/assets/js/components/header";
+import { Consumer, Producer, Transport } from "mediasoup-client/types";
 
-let device = null;
-let localStream = null;
-let producerTransport = null;
-let videoProducer = null;
-let audioProducer = null; //THIS client's producer
-let consumers = {}; //key off the audioPid
+type ConsumerType{
+  combinedStream: MediaStream;
+  userName: string;
+  consumerTransport: Transport;
+  audioConsumer: Consumer;
+  videoConsumer: Consumer;
+}
+let device: Device;
+let localStream : MediaStream;
+let producerTransport :Transport;
+let videoProducer: Producer;
+let audioProducer : Producer; //THIS client's producer
+let consumers :Record<string, ConsumerType> = {}; //key off the audioPid
 
-setupHeader(document.querySelector("#header"), "ویدئو");
+setupHeader(document.querySelector("#header")!, "ویدئو");
 
 const socket= io("/ws");
 
@@ -21,7 +29,7 @@ socket.on("connectionSuccess", (data) => {
   console.log(`Connected socketId: ${data.socketId}`);
 });
 
-socket.on("updateActiveSpeakers", async (newListOfActives) => {
+socket.on("updateActiveSpeakers", async (newListOfActives: string[]) => {
   // console.log("updateActiveSpeakers")
   // console.log(newListOfActives)
   // an array of the most recent 5 dominant speakers. Just grab the 1st
@@ -30,7 +38,7 @@ socket.on("updateActiveSpeakers", async (newListOfActives) => {
   console.log('updateActiveSpeakers:', newListOfActives);
   let slot = 0;
   // remove all videos from video Els
-  const remoteEls = document.getElementsByClassName("remote-video");
+  const remoteEls = document.getElementsByClassName("remote-video") as HTMLCollectionOf<HTMLVideoElement> ;
   for (let el of remoteEls) {
     el.srcObject = null; //clear out the <video>
   }
@@ -38,8 +46,8 @@ socket.on("updateActiveSpeakers", async (newListOfActives) => {
     if (aid !== audioProducer?.id) {
       // do not show THIS client in a video tag, other than local
       // put this video in the next available slot
-      const remoteVideo = document.getElementById(`remote-video-${slot}`);
-      const remoteVideoUserName = document.getElementById(`username-${slot}`);
+      const remoteVideo = document.getElementById(`remote-video-${slot}`) as HTMLVideoElement;
+      const remoteVideoUserName = document.getElementById(`username-${slot}`) as HTMLDivElement;
       const consumerForThisSlot = consumers[aid];
       remoteVideo.srcObject = consumerForThisSlot?.combinedStream;
       remoteVideoUserName.innerHTML = consumerForThisSlot?.userName;
@@ -84,7 +92,7 @@ const joinRoom = async () => {
     //These arrays, may be empty... they may have a max of 5 indicies
     requestTransportToConsume(joinRoomResp, socket, device, consumers);
     ``
-    buttons.enableFeed.disabled = false;
+    buttons.enableFeed?.disabled = false;
     buttons.sendFeed.disabled = true;
     buttons.muteBtn.disabled = true;    
   }
