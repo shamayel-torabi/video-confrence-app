@@ -7,9 +7,9 @@ const createProducer = (localStream, producerTransport)=>{
         try{
             // running the produce method, will tell the transport 
             // connect event to fire!!
-            console.log("Calling produce on video")
+            //console.log("Calling produce on video")
             const videoProducer = await producerTransport.produce({track:videoTrack})
-            console.log("Calling produce on audio")
+            //console.log("Calling produce on audio")
             const audioProducer = await producerTransport.produce({track:audioTrack})
             console.log("finished producing!")
             resolve({audioProducer,videoProducer})

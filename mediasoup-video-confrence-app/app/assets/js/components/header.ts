@@ -1,5 +1,4 @@
-
-export function setupHeader(element: HTMLElement, title: string) {
+export function setupHeader(element: HTMLDivElement, title: string) {
   element.innerHTML = `
     <nav class="max-w-screen-x min-h-(--header-height)">
       <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">

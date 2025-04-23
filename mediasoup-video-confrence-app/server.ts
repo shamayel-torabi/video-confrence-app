@@ -3,7 +3,7 @@ import compression from 'compression';
 import sirv from 'sirv'
 import config from "./vite.config.ts";
 import { createServer } from "vite";
-import runMediaSoupServer from './server/mediaServer.ts'
+import runMediaSoupServer from './server/mediaServer'
 
 // Constants
 const isProduction = process.env.NODE_ENV === "production";

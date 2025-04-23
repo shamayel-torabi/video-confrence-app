@@ -31,4 +31,3 @@ export const createWorkers = () =>
 
     resolve(workers);
   });
-

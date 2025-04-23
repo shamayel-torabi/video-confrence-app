@@ -1,44 +1,75 @@
 // Rooms are not a MediaSoup thing. MS cares about mediastreams, transports,
 // things like that. It doesn't care, or know, about rooms.
 // Rooms can be inside of clients, clients inside of rooms,
-
 import { EventEmitter } from "node:events";
-import { ActiveSpeakerObserver, ActiveSpeakerObserverDominantSpeaker, Router, Worker } from "mediasoup/types";
+import {
+  ActiveSpeakerObserver,
+  ActiveSpeakerObserverDominantSpeaker,
+  Router,
+  Worker,
+} from "mediasoup/types";
 import { Client } from "./Client";
 import { config } from "./config";
 import { SocketIOType } from "./mediaServer";
+import { Message } from "./types";
 
 // transports can belong to rooms or clients, etc.
 export class Room extends EventEmitter {
-  roomName: string;
-  worker: Worker;
-  router: Router | undefined;
-  clients: Client[];
-  activeSpeakerList: string[];
-  activeSpeakerObserver: ActiveSpeakerObserver | undefined;
+  public roomName: string;
+  public id: string;
+  private worker: Worker;
+  private io: SocketIOType;
 
-  constructor(roomName: string, workerToUse: Worker) {
+  public activeSpeakerObserver: ActiveSpeakerObserver | undefined;
+  public router: Router | undefined;
+  public clients: Client[] = [];
+  public messages: Message[] = [];
+  public activeSpeakerList: string[] = [];
+
+  constructor(
+    roomName: string,
+    roomId: string,
+    worker: Worker,
+    io: SocketIOType
+  ) {
     super();
     this.roomName = roomName;
-    this.worker = workerToUse;
-    //all the Client objects that are in this room
-    this.clients = [];
-    //an array of id's with the most recent dominant speaker first
-    this.activeSpeakerList = [];
+    this.id = roomId;
+    this.worker = worker;
+    this.io = io;
   }
 
-  close() {
+  public close() {
     if (this.router) {
       this.router.close();
     }
     this.emit("close");
   }
-  
-  addClient(client: Client) {
+
+  public addClient(client: Client) {
     this.clients.push(client);
   }
 
-  createRouter(io: SocketIOType) {
+  public addMessage(message: Message) {
+    this.messages.push(message);
+  }
+
+  public removeClient(client: Client) {
+    const producerId = client.producer?.audio?.id;
+    if (producerId) {
+      //console.log("activeSpeakerObserver removeProducer:", producerId);
+      this.activeSpeakerObserver?.removeProducer({ producerId });
+      this.activeSpeakerList = this.activeSpeakerList.filter(
+        (ac) => ac !== producerId
+      );
+
+      this.updateActiveSpeakers();
+    }
+
+    this.clients = this.clients.filter((c) => c.id !== client.id);
+  }
+
+  public createRouter() {
     return new Promise<void>(async (resolve, _reject) => {
       this.router = await this.worker.createRouter({
         mediaCodecs: config.routerMediaCodecs,
@@ -48,51 +79,13 @@ export class Room extends EventEmitter {
           interval: 300, //300 is default
         });
       this.activeSpeakerObserver.on("dominantspeaker", (ds) =>
-        this.newDominantSpeaker(ds, io)
+        this.newDominantSpeaker(ds)
       );
       resolve();
     });
   }
 
-  newDominantSpeaker(ds: ActiveSpeakerObserverDominantSpeaker, io: SocketIOType) {
-    console.log('======ds======', ds.producer.id)
-    // look through this room's activeSpeakerList for this producer's pid
-    // we KNOW that it is an audio pid
-    const i = this.activeSpeakerList.findIndex(pid => pid === ds.producer.id)
-    if (i > -1) {
-      // this person is in the list, and need to moved to the front
-      const [pid] = this.activeSpeakerList.splice(i, 1)
-      this.activeSpeakerList.unshift(pid)
-    } else {
-      // this is a new producer, just add to the front
-      this.activeSpeakerList.unshift(ds.producer.id)
-    }
-    console.log(this.activeSpeakerList)
-    // PLACEHOLDER - the activeSpeakerlist has changed!
-    // updateActiveSpeakers = mute/unmute/get new transports
-    const newTransportsByPeer = this.updateActiveSpeakers(io)
-    for (const [socketId, audioPidsToCreate] of Object.entries(newTransportsByPeer)) {
-      // we have the audioPidsToCreate this socket needs to create
-      // map the video pids and the username
-      const videoPidsToCreate = audioPidsToCreate.map(aPid => {
-        const producerClient = this.clients.find(c => c?.producer?.audio?.id === aPid)
-        return producerClient?.producer?.video?.id || ''
-      })
-      const associatedUserNames = audioPidsToCreate.map(aPid => {
-        const producerClient = this.clients.find(c => c?.producer?.audio?.id === aPid)
-        return producerClient?.userName || ''
-      })
-      io.to(socketId).emit('newProducersToConsume', {
-        routerRtpCapabilities: this.router?.rtpCapabilities!,
-        audioPidsToCreate,
-        videoPidsToCreate,
-        associatedUserNames,
-        activeSpeakerList: this.activeSpeakerList.slice(0, 5)
-      })
-    }
-  }
-
-  updateActiveSpeakers(io: SocketIOType) {
+  public updateActiveSpeakers() {
     //this function is called on newDominantSpeaker, or a new peer produces
     // mutes existing consumers/producer if below 5, for all peers in room
     // unmutes existing consumers/producer if in top 5, for all peers in room
@@ -148,15 +141,90 @@ export class Room extends EventEmitter {
         // this client has at least 1 new consumer/transport to make
         // at socket.id key, put the array of newSpeakers to make
         // if there were no newSpeakers, then there will be no key for that client
-        newTransportsByPeer[client.socket.id] = newSpeakersToThisClient;
+        newTransportsByPeer[client.id] = newSpeakersToThisClient;
       }
     });
     // client loop is done. We have muted or unmuted all producers/consumers
     // based on the new activeSpeakerList. Now, send out the consumers that
     // need to be made.
     // Broadcast to this this
-    io.to(this.roomName).emit("updateActiveSpeakers", activeSpeakers);
-    return newTransportsByPeer;
-  };
+    this.io.to(this.id).emit("updateActiveSpeakers", activeSpeakers);
+    this.updateProducersToConsume(newTransportsByPeer);
+  }
 
+  public pidsToCreate() {
+    //fetch the first 0-5 pids in activeSpeakerList
+    const audioPidsToCreate = this.activeSpeakerList.slice(0, 5);
+    //find the videoPids and make an array with matching indicies
+    // for our audioPids.
+    const videoPidsToCreate = audioPidsToCreate.map((aid) => {
+      const producingClient = this.clients.find(
+        (c) => c?.producer?.audio?.id === aid
+      );
+      return producingClient?.producer?.video?.id || "";
+    });
+    //find the username and make an array with matching indicies
+    // for our audioPids/videoPids.
+    const associatedUserNames = audioPidsToCreate.map((aid) => {
+      const producingClient = this.clients.find(
+        (c) => c?.producer?.audio?.id === aid
+      );
+      return producingClient?.userName || "";
+    });
+
+    return {
+      audioPidsToCreate,
+      videoPidsToCreate,
+      associatedUserNames,
+    };
+  }
+
+  private newDominantSpeaker(ds: ActiveSpeakerObserverDominantSpeaker) {
+    console.log("======ds======", ds.producer.id);
+    // look through this room's activeSpeakerList for this producer's pid
+    // we KNOW that it is an audio pid
+    const i = this.activeSpeakerList.findIndex((pid) => pid === ds.producer.id);
+    if (i > -1) {
+      // this person is in the list, and need to moved to the front
+      const [pid] = this.activeSpeakerList.splice(i, 1);
+      this.activeSpeakerList.unshift(pid);
+    } else {
+      // this is a new producer, just add to the front
+      this.activeSpeakerList.unshift(ds.producer.id);
+    }
+    //console.log(this.activeSpeakerList);
+    // PLACEHOLDER - the activeSpeakerlist has changed!
+    // updateActiveSpeakers = mute/unmute/get new transports
+    this.updateActiveSpeakers();
+  }
+
+  private updateProducersToConsume(
+    newTransportsByPeer: Record<string, string[]>
+  ) {
+    for (const [socketId, audioPidsToCreate] of Object.entries(
+      newTransportsByPeer
+    )) {
+      // we have the audioPidsToCreate this socket needs to create
+      // map the video pids and the username
+      const videoPidsToCreate = audioPidsToCreate.map((aPid) => {
+        const producerClient = this.clients.find(
+          (c) => c?.producer?.audio?.id === aPid
+        );
+        return producerClient?.producer?.video?.id || "";
+      });
+      const associatedUserNames = audioPidsToCreate.map((aPid) => {
+        const producerClient = this.clients.find(
+          (c) => c?.producer?.audio?.id === aPid
+        );
+        return producerClient?.userName || "";
+      });
+      this.io.to(socketId).emit("newProducersToConsume", {
+        routerRtpCapabilities: this.router?.rtpCapabilities!,
+        audioPidsToCreate,
+        videoPidsToCreate,
+        associatedUserNames,
+        activeSpeakerList: this.activeSpeakerList.slice(0, 5),
+      });
+    }
+  }
 }

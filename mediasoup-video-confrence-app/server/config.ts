@@ -11,8 +11,11 @@ type configTYpe = {
   routerMediaCodecs: RtpCodecCapability[]
 }
 
+const HOST = process.env.HOST;
+//console.log('HOST=', HOST)
+
 const config: configTYpe = {
-  port: 3031,
+  port: Number.parseInt(process.env.PORT!) || 3000,
   workerSettings: {
     //rtcMinPort and max are just arbitray ports for our traffic
     //useful for firewall or networking rules
@@ -51,7 +54,13 @@ const config: configTYpe = {
       {
         protocol: 'udp',
         ip: "0.0.0.0", //anywhere
-        announcedAddress: '192.168.1.148', // replace by public IP address
+        announcedAddress: `${HOST}` // "192.168.1.191", // replace by public IP address
+        // announcedAddress: '76.97.119.246',
+      },
+      {
+        protocol: 'tcp',
+        ip: "0.0.0.0", //anywhere
+        announcedAddress: `${HOST}` //"192.168.1.191", // replace by public IP address
         // announcedAddress: '76.97.119.246',
       },
     ],

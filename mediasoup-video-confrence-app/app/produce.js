@@ -2,8 +2,8 @@ import { io } from "socket.io-client";
 import { Device } from "mediasoup-client";
 import buttons from "@/assets/js/uiButtons";
 import createProducerTransport from "@/assets/js/mediaSoupFunctions/createProducerTransport";
-import createProducer from "@/assets/js/mediaSoupFunctions/createProducer.js";
-import requestTransportToConsume from "@/assets/js/mediaSoupFunctions/requestTransportToConsume.js";
+import createProducer from "@/assets/js/mediaSoupFunctions/createProducer";
+import requestTransportToConsume from "@/assets/js/mediaSoupFunctions/requestTransportToConsume";
 import { setupHeader } from "@/assets/js/components/header";
 
 let device = null;
@@ -15,11 +15,10 @@ let consumers = {}; //key off the audioPid
 
 setupHeader(document.querySelector("#header"), "ویدئو");
 
-// const socket = io.connect('https://localhost:3031')
-//FOR LOCAL ONLY... no https
-const socket = io("/ws");
-socket.on("connect", () => {
-  console.log(`Connected socketId`);
+const socket= io("/ws");
+
+socket.on("connectionSuccess", (data) => {
+  console.log(`Connected socketId: ${data.socketId}`);
 });
 
 socket.on("updateActiveSpeakers", async (newListOfActives) => {
@@ -28,7 +27,7 @@ socket.on("updateActiveSpeakers", async (newListOfActives) => {
   // an array of the most recent 5 dominant speakers. Just grab the 1st
   // and put it in the slot. Move everything else down
   // consumers is an {} with key of audioId, value of combined feed
-  console.log(newListOfActives);
+  console.log('updateActiveSpeakers:', newListOfActives);
   let slot = 0;
   // remove all videos from video Els
   const remoteEls = document.getElementsByClassName("remote-video");
@@ -59,22 +58,35 @@ const joinRoom = async () => {
   const urlParams = new URLSearchParams(window.location.search);
 
   const userName = urlParams.get("username");
-  const roomName = urlParams.get("room");
+  const roomId = urlParams.get("roomId");
 
-  if (userName && roomName) {
-    const joinRoomResp = await socket.emitWithAck("joinRoom", { userName, roomName });
+  if (userName && roomId) {
+    const joinRoomResp = await socket.emitWithAck("joinRoom", {
+      userName,
+      roomId,
+    });
+
+    if(joinRoomResp.error){
+      alert(joinRoomResp.error)
+      return;
+    }
+    // console.log(joinRoomResp)
     device = new Device();
     await device.load({
-      routerRtpCapabilities: joinRoomResp.consumeData.routerRtpCapabilities,
+      routerRtpCapabilities: joinRoomResp.routerRtpCapabilities,
     });
     // console.log(device)
-    console.log(joinRoomResp.consumeData);
+    console.log('joinRoomResp:', joinRoomResp);
     // joinRoomResp contains arrays for:
     // audioPidsToCreate
     // mapped to videoPidsToCreate
     // mapped to usernames
     //These arrays, may be empty... they may have a max of 5 indicies
-    requestTransportToConsume(joinRoomResp.consumeData, socket, device, consumers);
+    requestTransportToConsume(joinRoomResp, socket, device, consumers);
+    ``
+    buttons.enableFeed.disabled = false;
+    buttons.sendFeed.disabled = true;
+    buttons.muteBtn.disabled = true;    
   }
 };
 
@@ -98,7 +110,7 @@ const sendFeed = async () => {
   const producers = await createProducer(localStream, producerTransport);
   audioProducer = producers.audioProducer;
   videoProducer = producers.videoProducer;
-  console.log(producers);
+  //console.log(producers);
   buttons.hangUp.disabled = false;
 };
 

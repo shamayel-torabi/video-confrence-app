@@ -1,4 +1,4 @@
-const enableFeed: HTMLElement | null = document.getElementById('enable-feed')
+const enableFeed = document.getElementById('enable-feed')
 const sendFeed = document.getElementById('send-feed')
 const hangUp = document.getElementById('hang-up')
 const roomInfo = document.getElementById('room-info')
