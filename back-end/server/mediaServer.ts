@@ -145,24 +145,26 @@ const runMediaSoupServer = async (app: any) => {
       // add this socket to the socket room
       socket.join(client.room.roomName);
 
-      //fetch the first 0-5 pids in activeSpeakerList
-      const audioPidsToCreate = client.room.activeSpeakerList.slice(0, 5);
-      //find the videoPids and make an array with matching indicies
-      // for our audioPids.
-      const videoPidsToCreate = audioPidsToCreate.map((aid) => {
-        const producingClient = client.room.clients.find(
-          (c) => c?.producer?.audio?.id === aid
-        );
-        return producingClient?.producer?.video?.id || "";
-      });
-      //find the username and make an array with matching indicies
-      // for our audioPids/videoPids.
-      const associatedUserNames = audioPidsToCreate.map((aid) => {
-        const producingClient = client.room.clients.find(
-          (c) => c?.producer?.audio?.id === aid
-        );
-        return producingClient?.userName || "";
-      });
+      const {audioPidsToCreate, videoPidsToCreate, associatedUserNames} = client.room.pidsToCreate();
+
+      // //fetch the first 0-5 pids in activeSpeakerList
+      // const audioPidsToCreate = client.room.activeSpeakerList.slice(0, 5);
+      // //find the videoPids and make an array with matching indicies
+      // // for our audioPids.
+      // const videoPidsToCreate = audioPidsToCreate.map((aid) => {
+      //   const producingClient = client.room.clients.find(
+      //     (c) => c?.producer?.audio?.id === aid
+      //   );
+      //   return producingClient?.producer?.video?.id || "";
+      // });
+      // //find the username and make an array with matching indicies
+      // // for our audioPids/videoPids.
+      // const associatedUserNames = audioPidsToCreate.map((aid) => {
+      //   const producingClient = client.room.clients.find(
+      //     (c) => c?.producer?.audio?.id === aid
+      //   );
+      //   return producingClient?.userName || "";
+      // });
 
       ackCb({
         routerRtpCapabilities: client.room.router?.rtpCapabilities!,

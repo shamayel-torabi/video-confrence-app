@@ -33,23 +33,25 @@ export class Room extends EventEmitter {
     this.activeSpeakerList = [];
   }
 
-  close() {
+  public close() {
     if (this.router) {
       this.router.close();
     }
     this.emit("close");
   }
 
-  addClient(client: Client) {
+  public addClient(client: Client) {
     this.clients.push(client);
   }
 
-  removeClient(client: Client) {
+  public removeClient(client: Client) {
     const producerId = client.producer?.audio?.id;
     if (producerId) {
       //console.log("activeSpeakerObserver removeProducer:", producerId);
       this.activeSpeakerObserver?.removeProducer({ producerId });
-      this.activeSpeakerList = this.activeSpeakerList.filter(ac => ac !== producerId);
+      this.activeSpeakerList = this.activeSpeakerList.filter(
+        (ac) => ac !== producerId
+      );
 
       this.updateActiveSpeakers();
     }
@@ -57,7 +59,7 @@ export class Room extends EventEmitter {
     this.clients = this.clients.filter((c) => c.id !== client.id);
   }
 
-  createRouter() {
+  public createRouter() {
     return new Promise<void>(async (resolve, _reject) => {
       this.router = await this.worker.createRouter({
         mediaCodecs: config.routerMediaCodecs,
@@ -73,26 +75,7 @@ export class Room extends EventEmitter {
     });
   }
 
-  newDominantSpeaker(ds: ActiveSpeakerObserverDominantSpeaker) {
-    console.log("======ds======", ds.producer.id);
-    // look through this room's activeSpeakerList for this producer's pid
-    // we KNOW that it is an audio pid
-    const i = this.activeSpeakerList.findIndex((pid) => pid === ds.producer.id);
-    if (i > -1) {
-      // this person is in the list, and need to moved to the front
-      const [pid] = this.activeSpeakerList.splice(i, 1);
-      this.activeSpeakerList.unshift(pid);
-    } else {
-      // this is a new producer, just add to the front
-      this.activeSpeakerList.unshift(ds.producer.id);
-    }
-    //console.log(this.activeSpeakerList);
-    // PLACEHOLDER - the activeSpeakerlist has changed!
-    // updateActiveSpeakers = mute/unmute/get new transports
-    this.updateActiveSpeakers();
-  }
-
-  updateActiveSpeakers() {
+  public updateActiveSpeakers() {
     //this function is called on newDominantSpeaker, or a new peer produces
     // mutes existing consumers/producer if below 5, for all peers in room
     // unmutes existing consumers/producer if in top 5, for all peers in room
@@ -159,7 +142,55 @@ export class Room extends EventEmitter {
     this.updateProducersToConsume(newTransportsByPeer);
   }
 
-  private updateProducersToConsume(newTransportsByPeer: Record<string, string[]>) {
+  public pidsToCreate() {
+    //fetch the first 0-5 pids in activeSpeakerList
+    const audioPidsToCreate = this.activeSpeakerList.slice(0, 5);
+    //find the videoPids and make an array with matching indicies
+    // for our audioPids.
+    const videoPidsToCreate = audioPidsToCreate.map((aid) => {
+      const producingClient = this.clients.find(
+        (c) => c?.producer?.audio?.id === aid
+      );
+      return producingClient?.producer?.video?.id || '';
+    });
+    //find the username and make an array with matching indicies
+    // for our audioPids/videoPids.
+    const associatedUserNames = audioPidsToCreate.map((aid) => {
+      const producingClient = this.clients.find(
+        (c) => c?.producer?.audio?.id === aid
+      );
+      return producingClient?.userName || '';
+    });
+
+    return {
+      audioPidsToCreate,
+      videoPidsToCreate,
+      associatedUserNames,
+    };
+  }
+
+  private newDominantSpeaker(ds: ActiveSpeakerObserverDominantSpeaker) {
+    console.log("======ds======", ds.producer.id);
+    // look through this room's activeSpeakerList for this producer's pid
+    // we KNOW that it is an audio pid
+    const i = this.activeSpeakerList.findIndex((pid) => pid === ds.producer.id);
+    if (i > -1) {
+      // this person is in the list, and need to moved to the front
+      const [pid] = this.activeSpeakerList.splice(i, 1);
+      this.activeSpeakerList.unshift(pid);
+    } else {
+      // this is a new producer, just add to the front
+      this.activeSpeakerList.unshift(ds.producer.id);
+    }
+    //console.log(this.activeSpeakerList);
+    // PLACEHOLDER - the activeSpeakerlist has changed!
+    // updateActiveSpeakers = mute/unmute/get new transports
+    this.updateActiveSpeakers();
+  }
+
+  private updateProducersToConsume(
+    newTransportsByPeer: Record<string, string[]>
+  ) {
     for (const [socketId, audioPidsToCreate] of Object.entries(
       newTransportsByPeer
     )) {
