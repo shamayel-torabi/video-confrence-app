@@ -11,7 +11,7 @@ type configTYpe = {
   routerMediaCodecs: RtpCodecCapability[]
 }
 
-const HOST = process.env.HOST;
+const HOST = process.env.HOST || "localhost";
 //console.log('HOST=', HOST)
 
 const config: configTYpe = {

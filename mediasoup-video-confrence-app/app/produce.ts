@@ -4,7 +4,7 @@ import createProducerTransport from "@/assets/js/mediaSoupFunctions/createProduc
 import createProducer from "@/assets/js/mediaSoupFunctions/createProducer";
 import requestTransportToConsume from "@/assets/js/mediaSoupFunctions/requestTransportToConsume";
 import { setupHeader } from "@/assets/js/components/header";
-import { Consumer, Producer, Transport } from "mediasoup-client/types";
+import { Producer, Transport } from "mediasoup-client/types";
 import {
   enableFeedBtn,
   hangUpBtn,
@@ -97,10 +97,18 @@ const joinRoom = async () => {
     // mapped to usernames
     //These arrays, may be empty... they may have a max of 5 indicies
     requestTransportToConsume(joinRoomResp, socket, device, consumers);
-    ``;
+
     enableFeedBtn.disabled = false;
+    enableFeedBtn.classList.add('enable');
+
     sendFeedBtn.disabled = true;
+    sendFeedBtn.classList.add('disabled');
+
     muteBtn.disabled = true;
+    muteBtn.classList.add('disabled');
+
+    hangUpBtn.disabled = true;
+    hangUpBtn.classList.add('disabled');
   }
 };
 
@@ -110,9 +118,14 @@ const enableFeed = async () => {
     audio: true,
   });
   localMediaLeft.srcObject = localStream;
+
   enableFeedBtn.disabled = true;
+  enableFeedBtn.classList.remove('enable');
+  enableFeedBtn.classList.add('disabled')
+
   sendFeedBtn.disabled = false;
-  muteBtn.disabled = false;
+  sendFeedBtn.classList.add('enable');
+  sendFeedBtn.classList.remove('disabled');
 };
 
 const sendFeed = async () => {
@@ -125,7 +138,18 @@ const sendFeed = async () => {
   audioProducer = producers.audioProducer;
   videoProducer = producers.videoProducer;
   //console.log(producers);
+
+  sendFeedBtn.disabled = true;
+  sendFeedBtn.classList.remove('enable');
+  sendFeedBtn.classList.add('disabled');
+
+  muteBtn.disabled = false;
+  muteBtn.classList.add('enable');
+  muteBtn.classList.remove('disabled');
+
   hangUpBtn.disabled = false;
+  hangUpBtn.classList.add('enable');
+  hangUpBtn.classList.remove('disabled');
 };
 
 const muteAudio = () => {
@@ -144,8 +168,6 @@ const muteAudio = () => {
       <line x1="12" x2="12" y1="19" y2="22"/>
       </svg>
     `;
-    muteBtn.classList.add("btn-success"); //turn it green
-    muteBtn.classList.remove("btn-danger"); //remove the red
     // unpause on the server
     socket.emit("audioChange", "unmute");
   } else {
@@ -159,13 +181,16 @@ const muteAudio = () => {
       </svg>
 
     `;
-    muteBtn.classList.remove("btn-success"); //turn it green
-    muteBtn.classList.add("btn-danger"); //remove the red
     socket.emit("audioChange", "mute");
   }
 };
+
+const hangUp = async() =>{
+
+}
 
 window.addEventListener("load", joinRoom);
 enableFeedBtn.addEventListener("click", enableFeed);
 sendFeedBtn.addEventListener("click", sendFeed);
 muteBtn.addEventListener("click", muteAudio);
+hangUpBtn.addEventListener("click", hangUp)

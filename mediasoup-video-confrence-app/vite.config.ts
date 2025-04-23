@@ -12,12 +12,12 @@ const base = process.env.BASE || '/'
 export default defineConfig({
   server:{
      middlewareMode: true,
-     proxy: {
-      '/ws':{
-        target: 'ws://localhost:5173',
-        ws: true,
-      }
-     }
+    //  proxy: {
+    //   '/ws':{
+    //     target: 'ws://localhost:5173',
+    //     ws: true,
+    //   }
+    //  }
   },
   base,
   resolve: {

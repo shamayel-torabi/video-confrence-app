@@ -1,7 +1,7 @@
 const enableFeedBtn = document.getElementById('enable-feed') as HTMLButtonElement
 const sendFeedBtn = document.getElementById('send-feed') as HTMLButtonElement
-const hangUpBtn = document.getElementById('hang-up') as HTMLButtonElement
 const muteBtn = document.getElementById('mute')  as HTMLButtonElement
+const hangUpBtn = document.getElementById('hang-up') as HTMLButtonElement
 
 const roomInfo = document.getElementById('room-info')
 const control = document.getElementById('control-buttons')

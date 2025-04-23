@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "cross-env HOST=192.168.1.191 tsx watch server",
+    "dev": "tsx watch server",
     "build": "vite build",
     "preview": "cross-env NODE_ENV=production node server"
   },
