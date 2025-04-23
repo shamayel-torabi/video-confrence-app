@@ -11,26 +11,25 @@ import {
 import { Client } from "./Client";
 import { config } from "./config";
 import { SocketIOType } from "./mediaServer";
+import { Message } from "./types";
 
 // transports can belong to rooms or clients, etc.
 export class Room extends EventEmitter {
-  roomName: string;
-  worker: Worker;
-  io: SocketIOType;
-  router: Router | undefined;
-  clients: Client[];
-  activeSpeakerList: string[];
-  activeSpeakerObserver: ActiveSpeakerObserver | undefined;
+  public roomName: string;
+  private worker: Worker;
+  private io: SocketIOType;
 
-  constructor(roomName: string, workerToUse: Worker, io: SocketIOType) {
+  public activeSpeakerObserver: ActiveSpeakerObserver | undefined;
+  public router: Router | undefined;
+  public clients: Client[] = [];
+  public messages: Message[] = [];
+  public activeSpeakerList: string[] = [];
+
+  constructor(roomName: string, worker: Worker, io: SocketIOType) {
     super();
     this.roomName = roomName;
-    this.worker = workerToUse;
+    this.worker = worker;
     this.io = io;
-    //all the Client objects that are in this room
-    this.clients = [];
-    //an array of id's with the most recent dominant speaker first
-    this.activeSpeakerList = [];
   }
 
   public close() {
@@ -42,6 +41,10 @@ export class Room extends EventEmitter {
 
   public addClient(client: Client) {
     this.clients.push(client);
+  }
+
+  public addMessage(message: Message) {
+    this.messages.push(message);
   }
 
   public removeClient(client: Client) {
@@ -131,7 +134,7 @@ export class Room extends EventEmitter {
         // this client has at least 1 new consumer/transport to make
         // at socket.id key, put the array of newSpeakers to make
         // if there were no newSpeakers, then there will be no key for that client
-        newTransportsByPeer[client.socket.id] = newSpeakersToThisClient;
+        newTransportsByPeer[client.id] = newSpeakersToThisClient;
       }
     });
     // client loop is done. We have muted or unmuted all producers/consumers
@@ -151,7 +154,7 @@ export class Room extends EventEmitter {
       const producingClient = this.clients.find(
         (c) => c?.producer?.audio?.id === aid
       );
-      return producingClient?.producer?.video?.id || '';
+      return producingClient?.producer?.video?.id || "";
     });
     //find the username and make an array with matching indicies
     // for our audioPids/videoPids.
@@ -159,7 +162,7 @@ export class Room extends EventEmitter {
       const producingClient = this.clients.find(
         (c) => c?.producer?.audio?.id === aid
       );
-      return producingClient?.userName || '';
+      return producingClient?.userName || "";
     });
 
     return {

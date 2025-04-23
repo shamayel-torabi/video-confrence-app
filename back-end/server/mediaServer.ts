@@ -29,6 +29,15 @@ let workers: Worker[] = [];
 const rooms = new Map<string, Room>();
 
 interface ServerToClientEvents {
+  sendMessage: ({
+    text,
+    userName,
+    roomName,
+  }: {
+    text: string;
+    userName: string;
+    roomName: string;
+  }) => void;
   joinRoom: (
     data: { userName: string; roomName: string },
     ackCb: (result: {
@@ -118,13 +127,30 @@ const runMediaSoupServer = async (app: any) => {
       currentRooms.push({ roomId: key, roomName: room.roomName });
     });
 
+    socket.on("disconnect", () => {
+      if (client) {
+        client.close();
+      }
+    });
     socket.emit("connectionSuccess", {
       socketId: socket.id,
       rooms: currentRooms,
     });
-    socket.on("disconnect", () => {
-      if (client) {
-        client.close();
+    socket.on("sendMessage", ({ text, userName, roomName }) => {
+      const requestedRoom = rooms.get(roomName);
+
+      if (requestedRoom) {
+        const message = {
+          id: crypto.randomUUID().toString(),
+          text,
+          userName,
+          date: new Date().toISOString(),
+        };
+
+        requestedRoom.addMessage(message);
+        io.to(requestedRoom.roomName).emit("newMessage", message);
+      } else {
+        console.log(`Room :${roomName} not found`);
       }
     });
     socket.on("joinRoom", async ({ userName, roomName }, ackCb) => {
@@ -145,26 +171,8 @@ const runMediaSoupServer = async (app: any) => {
       // add this socket to the socket room
       socket.join(client.room.roomName);
 
-      const {audioPidsToCreate, videoPidsToCreate, associatedUserNames} = client.room.pidsToCreate();
-
-      // //fetch the first 0-5 pids in activeSpeakerList
-      // const audioPidsToCreate = client.room.activeSpeakerList.slice(0, 5);
-      // //find the videoPids and make an array with matching indicies
-      // // for our audioPids.
-      // const videoPidsToCreate = audioPidsToCreate.map((aid) => {
-      //   const producingClient = client.room.clients.find(
-      //     (c) => c?.producer?.audio?.id === aid
-      //   );
-      //   return producingClient?.producer?.video?.id || "";
-      // });
-      // //find the username and make an array with matching indicies
-      // // for our audioPids/videoPids.
-      // const associatedUserNames = audioPidsToCreate.map((aid) => {
-      //   const producingClient = client.room.clients.find(
-      //     (c) => c?.producer?.audio?.id === aid
-      //   );
-      //   return producingClient?.userName || "";
-      // });
+      const { audioPidsToCreate, videoPidsToCreate, associatedUserNames } =
+        client.room.pidsToCreate();
 
       ackCb({
         routerRtpCapabilities: client.room.router?.rtpCapabilities!,

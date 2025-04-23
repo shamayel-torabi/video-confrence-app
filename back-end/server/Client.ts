@@ -8,7 +8,7 @@ import { Consumer, MediaKind, Producer, WebRtcTransport } from "mediasoup/types"
 export class Client extends EventEmitter  {
   id: string;
   userName: string;
-  socket: SocketType;
+  private socket: SocketType;
   room: Room;
   upstreamTransport: WebRtcTransport | undefined ;
   producer: Record<string, Producer> = {};
@@ -27,6 +27,16 @@ export class Client extends EventEmitter  {
     console.log(`Close Client with socketId: ${this.socket.id}`);
     this.room.removeClient(this);
     this.emit("close");
+  }
+
+  getDownstreamTransport(audioPid: string) {
+    return this.downstreamTransports.find((t) => t?.associatedAudioPid === audioPid);
+  }
+
+  getDownstreamConsumer(pid: string, kind: MediaKind){
+    return this.downstreamTransports.find((t) => {
+      return t[kind]?.producerId === pid;
+    });
   }
   
   addTransport(type: string, audioPid?: string, videoPid?: string) {
