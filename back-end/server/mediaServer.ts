@@ -20,7 +20,8 @@ import { Room } from "./Room";
 import { Client } from "./Client";
 import { config } from "./config";
 
-const PORT = Number.parseInt(process.env.PORT || config.port.toString());
+const PORT = config.port;
+const HOST = process.env.HOST || "localhost";
 
 //our globals
 
@@ -347,7 +348,7 @@ const runMediaSoupServer = async (app: any) => {
   });
 
   httpServer.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on http://${HOST}:${PORT}`);
   });
 };
 
