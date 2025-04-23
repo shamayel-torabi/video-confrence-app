@@ -24,11 +24,7 @@ export class Client extends EventEmitter  {
   }
 
   close() {
-    if(this.upstreamTransport)
-    {
-      this.upstreamTransport.close();      
-    }
-
+    console.log(`Close Client with socketId: ${this.socket.id}`);
     this.room.removeClient(this);
     this.emit("close");
   }
@@ -40,6 +36,7 @@ export class Client extends EventEmitter  {
         initialAvailableOutgoingBitrate,
         maxIncomingBitrate,
       } = config.webRtcTransport;
+
       const transport: WebRtcTransport | undefined =
         await this.room.router?.createWebRtcTransport({
           enableUdp: true,
