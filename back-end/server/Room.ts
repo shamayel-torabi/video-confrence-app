@@ -16,6 +16,7 @@ import { Message } from "./types";
 // transports can belong to rooms or clients, etc.
 export class Room extends EventEmitter {
   public roomName: string;
+  public id: string;
   private worker: Worker;
   private io: SocketIOType;
 
@@ -25,9 +26,15 @@ export class Room extends EventEmitter {
   public messages: Message[] = [];
   public activeSpeakerList: string[] = [];
 
-  constructor(roomName: string, worker: Worker, io: SocketIOType) {
+  constructor(
+    roomName: string,
+    roomId: string,
+    worker: Worker,
+    io: SocketIOType
+  ) {
     super();
     this.roomName = roomName;
+    this.id = roomId;
     this.worker = worker;
     this.io = io;
   }
@@ -141,7 +148,7 @@ export class Room extends EventEmitter {
     // based on the new activeSpeakerList. Now, send out the consumers that
     // need to be made.
     // Broadcast to this this
-    this.io.to(this.roomName).emit("updateActiveSpeakers", activeSpeakers);
+    this.io.to(this.id).emit("updateActiveSpeakers", activeSpeakers);
     this.updateProducersToConsume(newTransportsByPeer);
   }
 

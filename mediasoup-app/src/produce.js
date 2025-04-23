@@ -58,13 +58,18 @@ const joinRoom = async () => {
   const urlParams = new URLSearchParams(window.location.search);
 
   const userName = urlParams.get("username");
-  const roomName = urlParams.get("room");
+  const roomId = urlParams.get("roomId");
 
-  if (userName && roomName) {
+  if (userName && roomId) {
     const joinRoomResp = await socket.emitWithAck("joinRoom", {
       userName,
-      roomName,
+      roomId,
     });
+
+    if(joinRoomResp.error){
+      alert(joinRoomResp.error)
+      return;
+    }
     // console.log(joinRoomResp)
     device = new Device();
     await device.load({
@@ -78,6 +83,10 @@ const joinRoom = async () => {
     // mapped to usernames
     //These arrays, may be empty... they may have a max of 5 indicies
     requestTransportToConsume(joinRoomResp, socket, device, consumers);
+    ``
+    buttons.enableFeed.disabled = false;
+    buttons.sendFeed.disabled = true;
+    buttons.muteBtn.disabled = true;    
   }
 };
 

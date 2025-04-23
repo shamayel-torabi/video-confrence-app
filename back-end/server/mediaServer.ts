@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { DefaultEventsMap, Namespace, Server, Socket } from "socket.io";
+import { v5 as uuidv5 } from "uuid";
 
 import { createWorkers } from "./createWorkers";
 import { getWorker } from "./getWorker";
@@ -22,6 +23,7 @@ import { config } from "./config";
 
 const PORT = config.port;
 const HOST = process.env.HOST || "localhost";
+const UUIDV5_NAMESPACE = "af6f650e-3ced-4f80-afef-f956afe3191d";
 
 //our globals
 
@@ -32,20 +34,26 @@ interface ServerToClientEvents {
   sendMessage: ({
     text,
     userName,
-    roomName,
+    roomId,
   }: {
     text: string;
     userName: string;
-    roomName: string;
+    roomId: string;
   }) => void;
+  createRoom: (
+    roomName: string,
+    ackCb: (result: { roomId: string }) => void
+  ) => void;
   joinRoom: (
-    data: { userName: string; roomName: string },
+    data: { userName: string; roomId: string },
     ackCb: (result: {
-      routerRtpCapabilities: RtpCapabilities;
-      newRoom: boolean;
-      audioPidsToCreate: string[];
-      videoPidsToCreate: string[];
-      associatedUserNames: string[];
+      routerRtpCapabilities?: RtpCapabilities;
+      newRoom?: boolean;
+      audioPidsToCreate?: string[];
+      videoPidsToCreate?: string[];
+      associatedUserNames?: string[];
+      messages?: Message[];
+      error?: string;
     }) => void
   ) => void;
   requestTransport: (
@@ -136,8 +144,8 @@ const runMediaSoupServer = async (app: any) => {
       socketId: socket.id,
       rooms: currentRooms,
     });
-    socket.on("sendMessage", ({ text, userName, roomName }) => {
-      const requestedRoom = rooms.get(roomName);
+    socket.on("sendMessage", ({ text, userName, roomId }) => {
+      const requestedRoom = rooms.get(roomId);
 
       if (requestedRoom) {
         const message = {
@@ -148,39 +156,67 @@ const runMediaSoupServer = async (app: any) => {
         };
 
         requestedRoom.addMessage(message);
-        io.to(requestedRoom.roomName).emit("newMessage", message);
+        io.to(requestedRoom.id).emit("newMessage", message);
       } else {
-        console.log(`Room :${roomName} not found`);
+        console.log(`RoomId :${roomId} not found`);
       }
     });
-    socket.on("joinRoom", async ({ userName, roomName }, ackCb) => {
-      let newRoom = false;
-      let requestedRoom = rooms.get(roomName);
+    socket.on("createRoom", async (roomName, ackCb) => {
+      try {
+        const roomId = uuidv5(roomName, UUIDV5_NAMESPACE);
+        let requestedRoom = rooms.get(roomId);
 
-      if (!requestedRoom) {
-        newRoom = true;
-        // make the new room, add a worker, add a router
-        const workerToUse = await getWorker(workers);
-        requestedRoom = new Room(roomName, workerToUse, io);
-        await requestedRoom.createRouter();
-        rooms.set(requestedRoom.roomName, requestedRoom);
+        if (!requestedRoom) {
+          const workerToUse = await getWorker(workers);
+          requestedRoom = new Room(roomName, roomId, workerToUse, io);
+          requestedRoom.on("close", () => {
+            console.log("Room closed");
+          });
+
+          await requestedRoom.createRouter();
+          rooms.set(requestedRoom.id, requestedRoom);
+
+          io.emit("newRoom", {
+            roomId: requestedRoom.id,
+            roomName: requestedRoom.roomName,
+          });
+        }
+
+        ackCb({ roomId: requestedRoom.id });
+      } catch (error) {
+        console.log(error);
       }
+    });
+    socket.on("joinRoom", async ({ userName, roomId }, ackCb) => {
+      try {
+        const requestedRoom = rooms.get(roomId);
 
-      client = new Client(userName, requestedRoom, socket);
+        if (requestedRoom) {
+          const newRoom = requestedRoom.clients.length === 0;
 
-      // add this socket to the socket room
-      socket.join(client.room.roomName);
+          client = new Client(userName, requestedRoom, socket);
 
-      const { audioPidsToCreate, videoPidsToCreate, associatedUserNames } =
-        client.room.pidsToCreate();
+          socket.join(client.room.id);
 
-      ackCb({
-        routerRtpCapabilities: client.room.router?.rtpCapabilities!,
-        newRoom,
-        audioPidsToCreate,
-        videoPidsToCreate,
-        associatedUserNames,
-      });
+          const { audioPidsToCreate, videoPidsToCreate, associatedUserNames } =
+            client.room.pidsToCreate();
+
+          ackCb({
+            routerRtpCapabilities: client.room.router?.rtpCapabilities!,
+            newRoom,
+            audioPidsToCreate,
+            videoPidsToCreate,
+            associatedUserNames,
+            messages: client.room.messages,
+          });
+        } else {
+          console.log(`Room with Id ${roomId} does not exist`);
+          ackCb({ error: `Room with Id ${roomId} does not exist` });
+        }
+      } catch (error) {
+        console.log(error);
+        ackCb({ error: `Room with Id ${roomId} does not exist` });
+      }
     });
     socket.on("requestTransport", async ({ type, audioPid }, ackCb) => {
       // whether producer or consumer, client needs params
