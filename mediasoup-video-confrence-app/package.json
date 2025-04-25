@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch server",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "preview": "cross-env NODE_ENV=production node server"
   },
   "dependencies": {
@@ -21,6 +21,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@types/compression": "^1.7.5",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.4",
     "cross-env": "^7.0.3",

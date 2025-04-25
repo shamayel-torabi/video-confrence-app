@@ -26,6 +26,9 @@ export class Client extends EventEmitter  {
   close() {
     console.log(`Close Client with socketId: ${this.socket.id}`);
     this.room.removeClient(this);
+
+    this.upstreamTransport?.close();
+    this.downstreamTransports.forEach(tr => tr.transport.close());
     this.emit("close");
   }
 
