@@ -12,17 +12,14 @@
 </head>
 
 <body>
-    <main class="grid grid-rows-[4rem_1fr] h-screen overflow-y-auto">
-        <header id="header" class="max-h-16 bg-gray-200 border-gray-400 dark:bg-gray-800"></header>
-        <section class="flex-1 overflow-y-auto p-2">
+    <main>
+        <section class="h-screen overflow-y-auto p-2">
             <article class="grid grid-cols-[1fr_16rem] gap-2">
-                <div class="grid grid-flow-row justify-items-center">
-                    <div class="w-[80%] space-y-4 mb-3">
-                        <video id="remote-video-0" class="w-full aspect-video" autoplay inline controls></video>
-                        <div id="username-0" class="text-center"></div>
-                    </div>
-                    <div class="h-8 grid items-center">
-                        <div id="control-buttons" class="space-x-1">
+                <div class="w-[90%] mx-auto">
+                    <div id="username-0" class="min-h-6 text-center"></div>
+                    <video id="remote-video-0" class="w-full aspect-video" autoplay inline controls></video>
+                    <div class="grid justify-center">
+                        <div>
                             <button id="enable-feed" title="ارسال تصاویر">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -70,24 +67,23 @@
                         </div>
                     </div>
                 </div>
-                <div id="remote-media"
-                    class="grid justify-self-start items-start gap-2 h-(calc(100vh - 4rem)) overflow-y-auto">
+                <div id="remote-media" class="grid justify-self-start items-start gap-2 overflow-y-auto">
                     <div id="local-media">
-                        <video id="local-video-left" class="border border-primary" muted autoplay inline></video>
+                        <video id="local-video-left" class="border" muted autoplay inline></video>
                     </div>
-                    <div class="border border-primary remote-speaker">
+                    <div class="border remote-speaker">
                         <video id="remote-video-1" class="w-full h-full remote-video" autoplay inline controls></video>
                         <div id="username-1" class="username"></div>
                     </div>
-                    <div class="border border-primary" style="width: 18%; height: 80px;">
+                    <div class="border" style="width: 18%; height: 80px;">
                         <video id="remote-video-2" class="w-full h-full remote-video" autoplay inline controls></video>
                         <div id="username-2" class="username"></div>
                     </div>
-                    <div class="border border-primary" style="width: 18%; height: 80px;">
+                    <div class="border" style="width: 18%; height: 80px;">
                         <video id="remote-video-3" class="w-full h-full remote-video" autoplay inline controls></video>
                         <div id="username-3" class="username"></div>
                     </div>
-                    <div class="border border-primary" style="width: 18%; height: 80px;">
+                    <div class="border" style="width: 18%; height: 80px;">
                         <video id="remote-video-4" class="w-full h-full remote-video" autoplay inline controls></video>
                         <div id="username-4" class="username"></div>
                     </div>

@@ -3,7 +3,6 @@ import { Device } from "mediasoup-client";
 import createProducerTransport from "@/assets/js/mediaSoupFunctions/createProducerTransport";
 import createProducer from "@/assets/js/mediaSoupFunctions/createProducer";
 import requestTransportToConsume from "@/assets/js/mediaSoupFunctions/requestTransportToConsume";
-import { setupHeader } from "@/assets/js/components/header";
 import { Producer, Transport } from "mediasoup-client/types";
 import {
   enableFeedBtn,
@@ -13,6 +12,7 @@ import {
   sendFeedBtn,
 } from "./assets/js/uiButtons";
 import { ConsumerType } from "@/assets/js/mediaSoupFunctions/types";
+//import { setupHeader } from "@/assets/js/components/header";
 
 let device: Device;
 let localStream: MediaStream;
@@ -21,7 +21,7 @@ let videoProducer: Producer;
 let audioProducer: Producer; //THIS client's producer
 let consumers: Record<string, ConsumerType> = {}; //key off the audioPid
 
-setupHeader(document.querySelector("#header")!, "ویدئو");
+//setupHeader(document.querySelector("#header")!, "ویدئو");
 
 const socket = io("/ws");
 

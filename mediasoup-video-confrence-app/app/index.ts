@@ -1,9 +1,9 @@
-import { setupHeader } from "@/assets/js/components/header";
+//import { setupHeader } from "@/assets/js/components/header";
 import { io } from "socket.io-client";
 
 const socket = io("/ws");
 
-setupHeader(document.querySelector("#header")!, "ویدئو");
+//setupHeader(document.querySelector("#header")!, "ویدئو");
 
 const frmJoin = document.getElementById("frmJoin") as HTMLFormElement;
 
