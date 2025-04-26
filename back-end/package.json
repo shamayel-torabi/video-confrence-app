@@ -5,9 +5,9 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "cross-env HOST=192.168.1.191 tsx watch app.ts",
+    "dev": "cross-env HOST=192.168.1.191 tsx watch server.ts",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
+    "@types/node": "^22.13.4",
     "cross-env": "^7.0.3",
     "tsx": "^4.19.3"
   }

@@ -7,7 +7,7 @@
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "declaration": true,
+    //"declaration": true,
     //"allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -21,6 +21,6 @@
   },
   "include": [
     "/server/**/*",
-    "app.ts"
+    "server.ts"
   ]
 }

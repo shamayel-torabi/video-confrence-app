@@ -11,11 +11,11 @@ type configTYpe = {
   routerMediaCodecs: RtpCodecCapability[]
 }
 
-const HOST = process.env.HOST;
+const HOST = process.env.HOST || "localhost";
 //console.log('HOST=', HOST)
 
 const config: configTYpe = {
-  port: Number.parseInt(process.env.PORT!) || 3031,
+  port: Number.parseInt(process.env.PORT!) || 3000,
   workerSettings: {
     //rtcMinPort and max are just arbitray ports for our traffic
     //useful for firewall or networking rules
