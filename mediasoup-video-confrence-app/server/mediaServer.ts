@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { DefaultEventsMap, Namespace, Server, Socket } from "socket.io";
+import { Namespace, Server, Socket } from "socket.io";
 import { v5 as uuidv5 } from "uuid";
 
 import { createWorkers } from "./createWorkers";
@@ -106,18 +106,8 @@ interface ClientToServerEvents {
   updateActiveSpeakers: (newListOfActives: string[]) => Promise<void>;
 }
 
-export type SocketType = Socket<
-  ServerToClientEvents,
-  ClientToServerEvents,
-  DefaultEventsMap,
-  any
->;
-export type SocketIOType = Namespace<
-  ServerToClientEvents,
-  ClientToServerEvents,
-  DefaultEventsMap,
-  any
->;
+export type SocketType = Socket<ServerToClientEvents, ClientToServerEvents>;
+export type SocketIOType = Namespace<ServerToClientEvents, ClientToServerEvents>;
 
 const runMediaSoupServer = async (app: any) => {
   workers = await createWorkers();
