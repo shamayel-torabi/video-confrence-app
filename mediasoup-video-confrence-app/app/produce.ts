@@ -11,7 +11,8 @@ import {
   muteBtn,
   sendFeedBtn,
 } from "./assets/js/uiButtons";
-import { ConsumerType } from "@/assets/js/mediaSoupFunctions/types";
+import { ConsumerType, RoomType } from "@/assets/js/types";
+import { useSocket } from "@/assets/js/useSocket";
 //import { setupHeader } from "@/assets/js/components/header";
 
 let device: Device;
@@ -23,11 +24,12 @@ let consumers: Record<string, ConsumerType> = {}; //key off the audioPid
 
 //setupHeader(document.querySelector("#header")!, "ویدئو");
 
-const socket = io("/ws");
+const socket = useSocket();
 
-socket.on("connectionSuccess", (data) => {
-  console.log(`Connected socketId: ${data.socketId}`);
-});
+socket.on(  "connectionSuccess",  (data: { socketId: string; rooms: RoomType[] }) => {
+    console.log(`Connected socketId: ${data.socketId}`);
+  }
+);
 
 socket.on("updateActiveSpeakers", async (newListOfActives: string[]) => {
   // console.log("updateActiveSpeakers")
@@ -87,7 +89,7 @@ const joinRoom = async () => {
     // console.log(joinRoomResp)
     device = new Device();
     await device.load({
-      routerRtpCapabilities: joinRoomResp.routerRtpCapabilities,
+      routerRtpCapabilities: joinRoomResp.result?.routerRtpCapabilities!,
     });
     // console.log(device)
     console.log("joinRoomResp:", joinRoomResp);
@@ -96,19 +98,19 @@ const joinRoom = async () => {
     // mapped to videoPidsToCreate
     // mapped to usernames
     //These arrays, may be empty... they may have a max of 5 indicies
-    requestTransportToConsume(joinRoomResp, socket, device, consumers);
+    requestTransportToConsume(joinRoomResp.result!, socket, device, consumers);
 
     enableFeedBtn.disabled = false;
-    enableFeedBtn.classList.add('enable');
+    enableFeedBtn.classList.add("enable");
 
     sendFeedBtn.disabled = true;
-    sendFeedBtn.classList.add('disabled');
+    sendFeedBtn.classList.add("disabled");
 
     muteBtn.disabled = true;
-    muteBtn.classList.add('disabled');
+    muteBtn.classList.add("disabled");
 
     hangUpBtn.disabled = true;
-    hangUpBtn.classList.add('disabled');
+    hangUpBtn.classList.add("disabled");
   }
 };
 
@@ -120,12 +122,12 @@ const enableFeed = async () => {
   localMediaLeft.srcObject = localStream;
 
   enableFeedBtn.disabled = true;
-  enableFeedBtn.classList.remove('enable');
-  enableFeedBtn.classList.add('disabled')
+  enableFeedBtn.classList.remove("enable");
+  enableFeedBtn.classList.add("disabled");
 
   sendFeedBtn.disabled = false;
-  sendFeedBtn.classList.add('enable');
-  sendFeedBtn.classList.remove('disabled');
+  sendFeedBtn.classList.add("enable");
+  sendFeedBtn.classList.remove("disabled");
 };
 
 const sendFeed = async () => {
@@ -140,16 +142,16 @@ const sendFeed = async () => {
   //console.log(producers);
 
   sendFeedBtn.disabled = true;
-  sendFeedBtn.classList.remove('enable');
-  sendFeedBtn.classList.add('disabled');
+  sendFeedBtn.classList.remove("enable");
+  sendFeedBtn.classList.add("disabled");
 
   muteBtn.disabled = false;
-  muteBtn.classList.add('enable');
-  muteBtn.classList.remove('disabled');
+  muteBtn.classList.add("enable");
+  muteBtn.classList.remove("disabled");
 
   hangUpBtn.disabled = false;
-  hangUpBtn.classList.add('enable');
-  hangUpBtn.classList.remove('disabled');
+  hangUpBtn.classList.add("enable");
+  hangUpBtn.classList.remove("disabled");
 };
 
 const muteAudio = () => {
@@ -185,12 +187,10 @@ const muteAudio = () => {
   }
 };
 
-const hangUp = async() =>{
-
-}
+const hangUp = async () => {};
 
 window.addEventListener("load", joinRoom);
 enableFeedBtn.addEventListener("click", enableFeed);
 sendFeedBtn.addEventListener("click", sendFeed);
 muteBtn.addEventListener("click", muteAudio);
-hangUpBtn.addEventListener("click", hangUp)
+hangUpBtn.addEventListener("click", hangUp);

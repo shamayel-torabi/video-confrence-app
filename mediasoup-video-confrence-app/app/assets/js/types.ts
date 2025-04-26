@@ -6,22 +6,14 @@ import {
   MediaKind,
   RtpCapabilities,
   RtpParameters,
-  WebRtcTransport,
-} from "mediasoup/types";
+  Transport,
+} from "mediasoup-client/types";
 
 export type Message = {
   id: string;
   text: string;
   userName: string;
   date: string;
-};
-
-export type MediaConsumer = {
-  combinedStream: MediaStream;
-  userName: string;
-  consumerTransport: WebRtcTransport;
-  audioConsumer: Consumer;
-  videoConsumer: Consumer;
 };
 
 export type ConsumeData = {
@@ -32,12 +24,12 @@ export type ConsumeData = {
   activeSpeakerList?: string[];
 };
 
-export type DownstreamTransportType = {
-  transport: WebRtcTransport;
-  associatedVideoPid: string;
-  associatedAudioPid: string;
-  audio?: Consumer;
-  video?: Consumer;
+export type ConsumerType = {
+  combinedStream: MediaStream;
+  userName: string;
+  consumerTransport: Transport;
+  audioConsumer: Consumer;
+  videoConsumer: Consumer;
 };
 
 export type ClientTransportOptions = {

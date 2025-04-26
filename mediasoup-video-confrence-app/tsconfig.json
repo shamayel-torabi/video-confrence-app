@@ -29,5 +29,5 @@
     "app",
     "server.ts",
     "server/**/*"
-  ]
+, "server/types.ts"  ]
 }

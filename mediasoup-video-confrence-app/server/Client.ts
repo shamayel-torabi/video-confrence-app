@@ -99,6 +99,8 @@ export class Client extends EventEmitter  {
       this.room.activeSpeakerObserver?.addProducer({
         producerId: newProducer.id,
       });
+
+      this.room.activeSpeakerList.push(newProducer?.id!);
     }
   }
   addConsumer(
