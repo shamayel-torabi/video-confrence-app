@@ -9,7 +9,8 @@
     100vh - var(--header-height) - var(--message--pane) -
       calc(var(--spacing) * 10)
   );
-  --page--height: calc(100vh - var(--header-height));
+  --page--height: calc(100vh - calc(var(--spacing) * 6));
+  --video--height: calc(100vh - calc(var(--spacing) * 36));
 }
 
 html,

@@ -2,7 +2,7 @@ import { Socket } from "socket.io-client";
 import createConsumer from "./createConsumer";
 import createConsumerTransport from "./createConsumerTransport";
 import { Device } from "mediasoup-client";
-import { ConsumeData, ConsumerType } from "../types";
+import { ConsumeData, ConsumerType } from "./types";
 
 const requestTransportToConsume = (
   consumeData: ConsumeData,

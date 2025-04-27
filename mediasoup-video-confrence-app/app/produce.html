@@ -14,10 +14,12 @@
 <body>
     <main>
         <section class="h-screen overflow-y-auto p-2">
-            <article class="grid grid-cols-[1fr_16rem] gap-2">
-                <div class="w-[90%] mx-auto">
-                    <div id="username-0" class="min-h-6 text-center"></div>
-                    <video id="remote-video-0" class="w-full aspect-video" autoplay inline controls></video>
+            <article class="grid grid-cols-[11fr_1fr] gap-2">
+                <div class="grid justify-self-start items-start w-full h-(--page--height)">
+                    <div id="username-0" class="h-8 text-center"></div>
+                    <div class="mx-auto">
+                        <video id="remote-video-0" class="h-(--video--height) aspect-video" autoplay inline controls></video>
+                    </div>
                     <div class="grid justify-center">
                         <div>
                             <button id="enable-feed" title="ارسال تصاویر">
@@ -70,22 +72,23 @@
                 <div id="remote-media" class="grid justify-self-start items-start gap-2 overflow-y-auto">
                     <div id="local-media">
                         <video id="local-video-left" class="border" muted autoplay inline></video>
+                        <div id="localUser" class="text-center"></div>
                     </div>
                     <div class="border remote-speaker">
                         <video id="remote-video-1" class="w-full h-full remote-video" autoplay inline controls></video>
-                        <div id="username-1" class="username"></div>
+                        <div id="username-1" class="username text-center"></div>
                     </div>
                     <div class="border" style="width: 18%; height: 80px;">
                         <video id="remote-video-2" class="w-full h-full remote-video" autoplay inline controls></video>
-                        <div id="username-2" class="username"></div>
+                        <div id="username-2" class="username text-center"></div>
                     </div>
                     <div class="border" style="width: 18%; height: 80px;">
                         <video id="remote-video-3" class="w-full h-full remote-video" autoplay inline controls></video>
-                        <div id="username-3" class="username"></div>
+                        <div id="username-3" class="username text-center"></div>
                     </div>
                     <div class="border" style="width: 18%; height: 80px;">
                         <video id="remote-video-4" class="w-full h-full remote-video" autoplay inline controls></video>
-                        <div id="username-4" class="username"></div>
+                        <div id="username-4" class="username text-center"></div>
                     </div>
                 </div>
             </article>

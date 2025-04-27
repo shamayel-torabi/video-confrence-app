@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { Namespace, Server, Socket } from "socket.io";
+import { DefaultEventsMap, Namespace, Server, Socket } from "socket.io";
 import { v5 as uuidv5 } from "uuid";
 
 import { createWorkers } from "./createWorkers";
@@ -25,6 +25,7 @@ const PORT = config.port;
 const HOST = process.env.HOST || "localhost";
 const UUIDV5_NAMESPACE = "af6f650e-3ced-4f80-afef-f956afe3191d";
 
+
 //our globals
 
 let workers: Worker[] = [];
@@ -42,28 +43,19 @@ interface ServerToClientEvents {
   }) => void;
   createRoom: (
     roomName: string,
-    ackCb: (result: { roomId?: string; error?: string }) => void
+    ackCb: (result: { roomId: string }) => void
   ) => void;
   joinRoom: (
     data: { userName: string; roomId: string },
-    ackCb: ({
-      result,
-      error,
-    }: {
-      result?: {
-        routerRtpCapabilities: RtpCapabilities;
-        newRoom: boolean;
-        audioPidsToCreate: string[];
-        videoPidsToCreate: string[];
-        associatedUserNames: string[];
-        messages: Message[];
-      };
+    ackCb: (result: {
+      routerRtpCapabilities?: RtpCapabilities;
+      newRoom?: boolean;
+      audioPidsToCreate?: string[];
+      videoPidsToCreate?: string[];
+      associatedUserNames?: string[];
+      messages?: Message[];
       error?: string;
     }) => void
-  ) => void;
-  closeRoom: (
-    data: { roomId: string },
-    ackCb: (result: { status: string }) => void
   ) => void;
   requestTransport: (
     data: { type: string; audioPid?: string },
@@ -106,8 +98,18 @@ interface ClientToServerEvents {
   updateActiveSpeakers: (newListOfActives: string[]) => Promise<void>;
 }
 
-export type SocketType = Socket<ServerToClientEvents, ClientToServerEvents>;
-export type SocketIOType = Namespace<ServerToClientEvents, ClientToServerEvents>;
+export type SocketType = Socket<
+  ServerToClientEvents,
+  ClientToServerEvents,
+  DefaultEventsMap,
+  any
+>;
+export type SocketIOType = Namespace<
+  ServerToClientEvents,
+  ClientToServerEvents,
+  DefaultEventsMap,
+  any
+>;
 
 const runMediaSoupServer = async (app: any) => {
   workers = await createWorkers();
@@ -188,7 +190,6 @@ const runMediaSoupServer = async (app: any) => {
         ackCb({ roomId: requestedRoom.id });
       } catch (error) {
         console.log(error);
-        ackCb({ error: "Cannot create Room" });
       }
     });
     socket.on("joinRoom", async ({ userName, roomId }, ackCb) => {
@@ -206,14 +207,12 @@ const runMediaSoupServer = async (app: any) => {
             client.room.pidsToCreate();
 
           ackCb({
-            result: {
-              routerRtpCapabilities: client.room.router?.rtpCapabilities!,
-              newRoom,
-              audioPidsToCreate,
-              videoPidsToCreate,
-              associatedUserNames,
-              messages: client.room.messages,
-            },
+            routerRtpCapabilities: client.room.router?.rtpCapabilities!,
+            newRoom,
+            audioPidsToCreate,
+            videoPidsToCreate,
+            associatedUserNames,
+            messages: client.room.messages,
           });
         } else {
           console.log(`Room with Id ${roomId} does not exist`);
@@ -222,22 +221,6 @@ const runMediaSoupServer = async (app: any) => {
       } catch (error) {
         console.log(error);
         ackCb({ error: `Room with Id ${roomId} does not exist` });
-      }
-    });
-    socket.on("closeRoom", ({ roomId }, ackCb) => {
-      try {
-        const requestedRoom = rooms.get(roomId);
-        if (!requestedRoom) throw new Error(`Error Closing RoomId: ${roomId}`);
-
-        requestedRoom.close();
-        ackCb({ status: "success" });
-      } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : `Error Closing RoomId: ${roomId}`;
-        console.log(errorMessage);
-        ackCb({ status: "error" });
       }
     });
     socket.on("requestTransport", async ({ type, audioPid }, ackCb) => {
@@ -299,9 +282,9 @@ const runMediaSoupServer = async (app: any) => {
         });
         //add the producer to this client obect
         client.addProducer(kind, newProducer!);
-        // if (kind === "audio") {
-        //   client.room.activeSpeakerList.push(newProducer?.id!);
-        // }
+        if (kind === "audio") {
+          client.room.activeSpeakerList.push(newProducer?.id!);
+        }
         // the front end is waiting for the id
         ackCb({ producerId: newProducer?.id! });
       } catch (err) {
